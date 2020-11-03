@@ -1,0 +1,121 @@
+---
+title: "a3_task3_andrea_gracia"
+author: "Andrea Gracia"
+date: "11/3/2020"
+output: html_document
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Attach packages, read in data, clean up names
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(janitor)
+library(here)
+library(ggplot2)
+library(kableExtra)
+library(lubridate)
+
+urchins <- read.csv(here("data","urchins.csv")) %>% 
+  clean_names()
+```
+
+
+# Section 1: Size comparisons for purple and red urchins
+
+## Exploratory data visualization
+
+Here we will compare the distribution of sizes between purple and red urchins using a faceted histogram and and box plot
+
+```{r}
+# Faceted histogram showing distribution for purple and red urchins 
+ggplot(data=urchins, aes(x= size))+
+  geom_histogram(bins=25)+
+  facet_wrap(~common_name)+
+  labs(x="Urchin Diameter (cm)")
+```
+```{r}
+#Boxplot summarizing urchin size distribution 
+ggplot(data=urchins, aes(x=common_name, y=size))+
+  geom_boxplot() +
+  labs(x="Species common name",
+       y="Urchin Diameter (cm)")
+```
+
+
+## Descriptive statistics table
+Summary table that contains statistics such as mean, median, standard deviation, and sample size for red and purple urchins.
+
+```{r,message=FALSE, warning=FALSE}
+urchin_stats <- urchins %>% 
+  group_by(common_name) %>% 
+  summarise(mean_size=mean(size),
+            median_size=median(size),
+            sd_size=sd(size),
+            n=n())
+
+kbl(urchin_stats) %>% 
+  kable_styling
+
+```
+
+The first graph in our data visualization exercise shows the purple and red urchin sample distributions. The red urchin sample is normally distributed, and the purple urchin sample distribution is positively skewed, which tells us that the observations for the purple sample are distributed toward smaller values on the left of the graph. In terms of the descriptive statistics for these observations, the mean and median diameter size for the red urchins is much higher compared to the second group, 41% and 43% larger respectively. The standard deviation of the red urchins is 46% higher, indicating that there is greater data spread in this group vs the second. 
+
+# Section 2: Purple urchin Counts by site and year
+
+## Subset of urchin data
+In the code below we will create a subset of the urchins data to only include observations for purple urchins. We will create a new year column, as well as a new column that includes the full name of each of the sites where data was collected. 
+
+```{r}
+purple_urchins <- urchins %>% 
+  filter(common_name == "Purple Urchin") %>% 
+  mutate(date=mdy(date)) %>% 
+  mutate(year=year(date)) %>% 
+  mutate(site_full=case_when(
+    site== "NAPL" ~ "Naples Reef",
+    site== "AQUE" ~ "Arroyo Quemado Reef",
+    site== "CARP" ~ "Carpinteria Reef",
+    site== "MOHK" ~ "Mohawk Reef",
+    site== "IVEE" ~ "Isla Vista Reef"))
+
+class(purple_urchins$date)
+```
+
+## Summary table
+In the code below we will create a summary table containing the total number of purple urchins observed by site per year.
+
+```{r}
+purple_urchins_summary <- purple_urchins %>% 
+  select(site_full,year) %>% 
+  count(site_full, year)
+
+```
+
+## Exploratory graph
+In the code below we will create an exploratory graph of the counts of purple urchins recorded at each site from 2008-2020 using geom_col() + facet_wrap()
+
+```{r}
+ggplot(data=purple_urchins_summary, aes(x=year, y=n))+
+  geom_col(aes(color=site_full))+
+  facet_wrap(~site_full)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
